@@ -7,9 +7,11 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "contract:emit": "prisma contract emit"
   },
   "repository": {
     "type": "git",
@@ -36,6 +38,7 @@
   "homepage": "https://github.com/devpabloh/crm-vendas-back-end#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@prisma/cli-engine": "^0.6.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.3",
@@ -43,11 +46,13 @@
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.12.0",
     "prettier": "^3.9.9",
+    "prisma": "^8.0.0-rc.17",
     "tsx": "^4.23.12",
     "typescript": "~6.0",
     "typescript-eslint": "^8.70.1"
   },
   "dependencies": {
+    "@prisma/orm-postgres": "^8.0.0-rc.12",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",

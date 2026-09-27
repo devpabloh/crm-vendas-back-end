@@ -9,9 +9,9 @@ if(!_env.success){
     console.error(`Variáveis de ambiente inválidas`)
 
     // O z.treeifyError recebe a instância do erro (_env.error) e gera uma árvore legível no terminal
-    console.log(z.treeifyError(_env.error))
-
-    throw new Error(`Variáveis de ambiente inválidas`)
+    console.error(z.treeifyError(_env.error))
+    
+    process.exit(1) // serve para finalizar o processo
 }
 
 export const env = _env.data // aqui exporta as variáveis já validadas e fortemente tipadas para o restante do projeto

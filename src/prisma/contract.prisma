@@ -1,0 +1,79 @@
+// use prisma-8
+
+enum DealStatus {OPEN WON LOST}
+enum StageType { OPEN WON LOST}
+
+model Contact {
+  id String @id @default(uuid())
+  workspaceId String
+  name String
+  email String?
+  phone String?
+  document String?
+  companyId String?
+  ownerId String?
+  lifecycleId String @defaul("LEAD")
+  customFields Json?
+  
+  // Relacionamentos
+  
+
+
+  // Timestamps (Data e hora de criação e atualização)
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  
+}
+
+model Stage {
+  id String @id @default(uuid())
+  pipelineId String
+  name String
+  order Int
+  probability Int @defaul(0)
+  type StageType @defaul(OPEN)
+
+  // Relacionamentos
+  
+}
+
+model Deal {
+  id String @id @default(uuid())
+  workspaceId String
+  title String 
+  value Decimal @db.decimal(14, 2)
+  currency String @default("BRL")
+  status DealStatus @default(OPEN)
+  expectedCloseDate DateTime?
+  closedAt DateTime?
+  lostReason String?
+  pipelineId String
+  stageId String
+  contactId String?
+  companyId String?
+  ownerId String
+  stage Stage @relation(fields: [stageId], references: [id])
+  contact Contact? @relation(fields: [contactId], references[id])
+  company Company? @relation(fields: [companyId], references[id])
+  owner User @relation(fields: [ownerId], references: [id])
+  products DealProduct[]
+  activities Activity[]
+  customFields Json?
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  @@map("deals")
+}
+
+model DealProduct {
+  id        String  @id @default(uuid())
+  dealId    String
+  productId String
+  quantity  Int     @default(1)
+  unitPrice Decimal @db.Decimal(14, 2)
+  discount  Decimal @db.Decimal(14, 2) @default(0)
+  deal      Deal    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+  @@map("deal_products")
+}

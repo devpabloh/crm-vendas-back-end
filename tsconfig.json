@@ -7,10 +7,12 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "NodeNext",
+    "module": "preserve",
     "target": "ES2023",
-    "moduleResolution": "NodeNext",
-    "types": ["node"],
+    "moduleResolution": "bundler",
+    "types": [
+      "node"
+    ],
     // For nodejs:
     // "lib": ["esnext"],
 
@@ -39,6 +41,7 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+    "resolveJsonModule": true,
   },
   "include": ["src", "tests"],
 }
