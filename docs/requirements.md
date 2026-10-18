@@ -111,12 +111,16 @@ Legenda: ✅ permitido · 👤 apenas os próprios · 👥 apenas da sua equipe 
 
 - **RF-008** **[MVP]** Criar uma proposta vinculada a um cliente e a um ou mais serviços.
 - **RF-009** **[MVP]** Alterar o status da proposta, respeitando as transições permitidas.
-- **RF-010** Cancelar uma venda, informando o motivo.
+- **RF-010** Cancelar uma venda, informando o motivo (gerente/admin).
+- **RF-021** Cliente aceita, recusa ou solicita ajustes na proposta por meio de um link seguro, sem login.
+- **RF-022** Notificar o vendedor quando o cliente responder à proposta.
+
+> No MVP, as alterações de status são feitas **manualmente** pelo vendedor (RF-009). O aceite online pelo cliente (RF-021) e as notificações (RF-022) ficam para depois do MVP, por exigirem acesso externo seguro e um mecanismo de notificações.
 
 ### Dashboard e relatórios
 
 - **RF-011** **[MVP]** Exibir métricas de vendas no escopo do usuário (próprias, da equipe ou de todos).
-- **RF-012** Filtrar métricas por vendedor e por período.
+- **RF-012** Filtrar métricas por vendedor, status e por período.
 - **RF-013** Exportar relatório (CSV/PDF).
 
 ### Gestão
@@ -126,7 +130,7 @@ Legenda: ✅ permitido · 👤 apenas os próprios · 👥 apenas da sua equipe 
 - **RF-016** Registrar as ações relevantes em log de auditoria.
 - **RF-017** Consultar o log de auditoria.
 
-> A numeração não é reordenada quando requisitos são adicionados. RF-018 a RF-020 surgiram depois e mantêm números novos para não quebrar referências em issues e testes.
+> A numeração não é reordenada quando requisitos são adicionados. RF-018 em diante surgiram depois e mantêm números novos para não quebrar referências em issues e testes.
 
 ---
 
@@ -141,24 +145,43 @@ Legenda: ✅ permitido · 👤 apenas os próprios · 👥 apenas da sua equipe 
 
 ### Propostas e vendas
 
-- **RN-003** Proposta com status GANHA não pode ser excluída, apenas cancelada (com motivo e registro em auditoria).
+- **RN-003** Proposta com status `GANHA` não pode ser excluída, apenas passar para `CANCELADA` (com motivo e registro em auditoria). Somente gerente ou admin podem cancelar.
 - **RN-004** A proposta armazena o preço de cada serviço no momento da criação (snapshot), sem ser afetada por alterações posteriores no catálogo.
 - **RN-005** Serviço inativo não aparece no catálogo público, mas continua visível nas propostas que já o referenciam.
 - **RN-012** Ciclo de vida da proposta:
 
   ```
-  RASCUNHO → ENVIADA → EM_NEGOCIAÇÃO → GANHA (= venda)
-                                      ↘ PERDIDA
+  RASCUNHO → ENVIADA ⇄ EM_NEGOCIACAO
+                │            │
+                ├────────────┼──→ GANHA (= venda) → CANCELADA
+                └────────────┴──→ PERDIDA
   ```
 
-  As transições proibidas e as regras de cada estado serão detalhadas nos critérios de aceitação do RF-009.
+  Transições permitidas (qualquer outra é rejeitada):
+
+  | De ↓ / Para → | `ENVIADA` | `EM_NEGOCIACAO` | `GANHA` | `PERDIDA` | `CANCELADA` |
+  |---|:-:|:-:|:-:|:-:|:-:|
+  | `RASCUNHO` | ✅ | ❌ | ❌ | ❌ | ❌ |
+  | `ENVIADA` | — | ✅ | ✅ | ✅ | ❌ |
+  | `EM_NEGOCIACAO` | ✅ | — | ✅ | ✅ | ❌ |
+  | `GANHA` | ❌ | ❌ | — | ❌ | ✅ *(gerente/admin, pós-MVP)* |
+  | `PERDIDA` | ❌ | ❌ | ❌ | — | ❌ |
+  | `CANCELADA` | ❌ | ❌ | ❌ | ❌ | — |
+
+  - `EM_NEGOCIACAO → ENVIADA`: o cliente pediu ajustes; o vendedor edita e reenvia a proposta.
+  - `GANHA`, `PERDIDA` e `CANCELADA` são estados finais (exceto o cancelamento de uma venda). Se o cliente voltar a negociar, cria-se uma nova proposta.
+  - Os status são identificadores de código e não usam acentos ou cedilha.
+
+- **RN-014** Ao passar para `GANHA` ou `PERDIDA`, a proposta registra a data de fechamento (`closedAt`).
+- **RN-015** Ao passar para `PERDIDA`, é obrigatório informar o motivo da perda.
+- **RN-016** Apenas propostas em `RASCUNHO` podem ser excluídas. Nos demais status, a proposta é mantida para preservar o histórico e as métricas.
 
 ### Leads
 
 - **RN-006** Lead sem responsável fica visível no pool para todos os vendedores e gerentes.
-- **RN-007** Um vendedor pode ter no máximo **N** leads em aberto ainda não trabalhados (padrão: 3).
+- **RN-007** Um vendedor pode ter no máximo **3** leads em aberto ainda não trabalhados. Um lead é considerado **trabalhado** quando o vendedor cria a primeira proposta para ele.
 - **RN-008** O gerente pode atribuir ou reatribuir leads do pool ou da própria equipe, sobrepondo a reivindicação.
-- **RN-009** *(pós-MVP)* Lead reivindicado sem interação registrada em X horas retorna ao pool.
+- **RN-009** *(pós-MVP)* Lead reivindicado que não for trabalhado (RN-007) em até 24 horas corridas retorna ao pool.
 - **RN-013** Não podem existir dois clientes com o mesmo CPF/CNPJ ou e-mail. Ao tentar cadastrar um duplicado, o sistema informa quem é o responsável atual.
 
 ---
@@ -203,11 +226,33 @@ Formato: **Dado** (contexto) / **Quando** (ação) / **Então** (resultado verif
 
 ### RF-008 — Criar proposta
 
-> **A fazer.**
+- **CA-011** Dado um vendedor autenticado e um cliente atribuído a ele, quando ele criar uma proposta com ao menos um serviço ativo, então a proposta é criada com status `RASCUNHO`, cada item armazena o preço vigente do serviço e a resposta é `201 Created`.
+- **CA-012** Dado um vendedor autenticado, quando ele tentar criar uma proposta para um cliente atribuído a outro vendedor, então o sistema responde `403 Forbidden` e nada é persistido.
+- **CA-013** Dado um vendedor autenticado e um cliente atribuído a ele, quando ele tentar criar uma proposta sem nenhum serviço, então o sistema responde `400 Bad Request` e nada é persistido.
+- **CA-014** Dado um serviço inativo, quando um vendedor tentar incluí-lo em uma nova proposta, então o sistema responde `422 Unprocessable Entity` informando que o serviço está inativo, e nada é persistido.
 
 ### RF-009 — Alterar status da proposta
 
-> **A fazer.**
+- **CA-015** Dada uma proposta em `RASCUNHO` de um vendedor autenticado, quando ele alterar o status para `ENVIADA`, então o status é atualizado e a ação é registrada em auditoria.
+- **CA-016** Dada uma proposta em `EM_NEGOCIACAO` de um vendedor autenticado, quando ele alterar o status para `GANHA`, então o status é atualizado, `closedAt` recebe a data e hora atual e a ação é registrada em auditoria.
+- **CA-017** Dada uma proposta em `ENVIADA` ou `EM_NEGOCIACAO`, quando o vendedor alterar o status para `PERDIDA` informando o motivo, então o status é atualizado, o motivo é armazenado e `closedAt` recebe a data e hora atual.
+- **CA-018** Dada uma proposta em `ENVIADA` ou `EM_NEGOCIACAO`, quando o vendedor tentar alterar o status para `PERDIDA` sem informar o motivo, então o sistema responde `400 Bad Request` e nada é alterado.
+- **CA-019** Dada uma proposta em `GANHA`, quando o vendedor tentar alterar o status para `RASCUNHO`, então o sistema responde `422 Unprocessable Entity` informando que a transição não é permitida, e nada é alterado.
+- **CA-020** Dado um vendedor autenticado, quando ele tentar alterar o status de uma proposta de outro vendedor, então o sistema responde `403 Forbidden` e nada é alterado.
+
+### RF-010 — Cancelar venda *(pós-MVP)*
+
+- **CA-021** Dada uma proposta em `GANHA` da equipe de um gerente autenticado, quando ele cancelá-la informando o motivo, então o status passa a `CANCELADA`, o motivo é armazenado e a ação é registrada em auditoria.
+- **CA-022** Dado um vendedor autenticado, quando ele tentar cancelar uma proposta em `GANHA`, então o sistema responde `403 Forbidden` e nada é alterado.
+
+### RF-021 — Aceite online pelo cliente *(pós-MVP)*
+
+> Ideias registradas para detalhar quando o requisito entrar em desenvolvimento:
+>
+> - O cliente aceita a proposta → status `GANHA` e o vendedor é notificado (RF-022).
+> - O cliente recusa a proposta → status `PERDIDA` e o vendedor é notificado.
+> - O cliente solicita ajustes → status `EM_NEGOCIACAO` e o vendedor é notificado.
+> - A definir: validade do link, como identificar o cliente com segurança, se o cliente deve informar o motivo da recusa.
 
 ---
 
@@ -215,11 +260,11 @@ Formato: **Dado** (contexto) / **Quando** (ação) / **Então** (resultado verif
 
 | Termo | Significado |
 |---|---|
-| **Lead** | Contato interessado que ainda não foi trabalhado por um vendedor. Pode vir do site ou ser cadastrado manualmente. |
+| **Lead** | Contato interessado que ainda não foi trabalhado por um vendedor, ou seja, que ainda não tem nenhuma proposta. Pode vir do site ou ser cadastrado manualmente. |
 | **Cliente** | Contato sob responsabilidade de um vendedor. |
 | **Pool de leads** | Conjunto de leads sem responsável, disponíveis para reivindicação. |
 | **Proposta** | Oferta de um ou mais serviços a um cliente. Ao ser ganha, passa a contar como **venda**. |
-| **Venda** | Proposta com status GANHA. Não é uma entidade separada. |
+| **Venda** | Proposta com status `GANHA`. Não é uma entidade separada. Uma venda cancelada passa a `CANCELADA` e deixa de contar nas métricas de vendas. |
 | **Equipe** | Conjunto de vendedores subordinados a um mesmo gerente. |
 | **Log de auditoria** | Registro de quem fez qual alteração e quando. Não confundir com *atividade* (interação com o cliente, como ligação ou reunião). |
 
@@ -227,7 +272,8 @@ Formato: **Dado** (contexto) / **Quando** (ação) / **Então** (resultado verif
 
 ## 8. Questões em aberto
 
-- [ ] Definir o que caracteriza um lead "trabalhado" para o limite da RN-007 (mudança de status? primeiro contato registrado?).
-- [ ] Definir o valor de **N** (RN-007) e de **X** horas (RN-009): fixos ou configuráveis pelo admin?
+- [x] ~~Definir o que caracteriza um lead "trabalhado".~~ Resolvido: quando o vendedor cria a primeira proposta para ele (RN-007).
+- [x] ~~Definir os valores da RN-007 e da RN-009.~~ Resolvido: 3 leads e 24 horas, **fixos no MVP**. Torná-los configuráveis pelo admin fica para depois.
+- [x] ~~RN-009: horas corridas ou úteis?~~ Resolvido: horas corridas.
 - [ ] Quando um vendedor muda de gerente, o histórico dele acompanha a mudança (comportamento atual) ou permanece com o gerente anterior?
 - [ ] Escolher a licença do projeto, considerando o uso como portfólio e a possível venda (ADR pendente).
