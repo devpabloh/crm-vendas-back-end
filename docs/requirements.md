@@ -13,6 +13,7 @@
 6. [Critérios de aceitação](#6-critérios-de-aceitação)
 7. [Glossário](#7-glossário)
 8. [Questões em aberto](#8-questões-em-aberto)
+9. [Ideias futuras](#9-ideias-futuras)
 
 ---
 
@@ -130,6 +131,13 @@ Legenda: ✅ permitido · 👤 apenas os próprios · 👥 apenas da sua equipe 
 - **RF-016** Registrar as ações relevantes em log de auditoria.
 - **RF-017** Consultar o log de auditoria.
 
+### Configurações da equipe *(pós-MVP)*
+
+- **RF-023** O gerente configura os parâmetros da própria equipe: limite de leads em aberto (RN-007), tempo de retorno do lead ao pool (RN-009) e limite de desconto sem aprovação (RN-018).
+- **RF-024** O gerente aprova ou rejeita propostas da sua equipe com desconto acima do limite.
+
+> Configurações **globais** (como a estratégia de distribuição de leads, RF-020) são do administrador. Configurações **da equipe** (RF-023) são do gerente.
+
 > A numeração não é reordenada quando requisitos são adicionados. RF-018 em diante surgiram depois e mantêm números novos para não quebrar referências em issues e testes.
 
 ---
@@ -183,6 +191,8 @@ Legenda: ✅ permitido · 👤 apenas os próprios · 👥 apenas da sua equipe 
 - **RN-008** O gerente pode atribuir ou reatribuir leads do pool ou da própria equipe, sobrepondo a reivindicação.
 - **RN-009** *(pós-MVP)* Lead reivindicado que não for trabalhado (RN-007) em até 24 horas corridas retorna ao pool.
 - **RN-013** Não podem existir dois clientes com o mesmo CPF/CNPJ ou e-mail. Ao tentar cadastrar um duplicado, o sistema informa quem é o responsável atual.
+- **RN-017** O desconto é aplicado por item, em percentual de 0% a 100%. O valor final de cada item é arredondado para 2 casas decimais (meio para cima), e o total da proposta é a soma dos valores finais dos itens.
+- **RN-018** *(pós-MVP)* Proposta com desconto acima do limite da equipe exige aprovação do gerente do vendedor antes de ser enviada, passando por um novo status `PENDING_APPROVAL`. Qualquer alteração nos itens de uma proposta aprovada invalida a aprovação e a proposta volta para `DRAFT`. No MVP, não há limite: qualquer desconto de 0% a 100% é permitido e fica registrado em auditoria.
 
 ---
 
@@ -195,6 +205,7 @@ Legenda: ✅ permitido · 👤 apenas os próprios · 👥 apenas da sua equipe 
 - **RNF-005** **[MVP]** Operações concorrentes sobre o mesmo lead (reivindicação/atribuição) devem ser atômicas: apenas uma pode ter sucesso.
 - **RNF-006** **[MVP]** Respostas de erro padronizadas, sem vazar detalhes internos (stack trace, SQL).
 - **RNF-007** Validação de variáveis de ambiente na inicialização (*fail fast*).
+- **RNF-008** **[MVP]** Toda resposta de erro inclui um código estável e legível por máquina (ex.: `PROPOSAL_INVALID_TRANSITION`), além da mensagem, para permitir a tradução das mensagens no front-end.
 
 ---
 
@@ -273,7 +284,21 @@ Formato: **Dado** (contexto) / **Quando** (ação) / **Então** (resultado verif
 ## 8. Questões em aberto
 
 - [x] ~~Definir o que caracteriza um lead "trabalhado".~~ Resolvido: quando o vendedor cria a primeira proposta para ele (RN-007).
-- [x] ~~Definir os valores da RN-007 e da RN-009.~~ Resolvido: 3 leads e 24 horas, **fixos no MVP**. Torná-los configuráveis pelo admin fica para depois.
+- [x] ~~Definir os valores da RN-007 e da RN-009.~~ Resolvido: 3 leads e 24 horas, **fixos no MVP**. Na v2, passam a ser configuráveis pelo gerente, por equipe (RF-023).
 - [x] ~~RN-009: horas corridas ou úteis?~~ Resolvido: horas corridas.
 - [ ] Quando um vendedor muda de gerente, o histórico dele acompanha a mudança (comportamento atual) ou permanece com o gerente anterior?
 - [ ] Escolher a licença do projeto, considerando o uso como portfólio e a possível venda (ADR pendente).
+- [ ] RN-018: gerente e admin também estão sujeitos a limite de desconto nas próprias propostas?
+- [ ] RN-018: qual o comportamento quando o gerente ainda não definiu o limite (0%, ou seja, tudo exige aprovação, ou sem limite)?
+- [x] ~~Proposta parada deve voltar para redistribuição?~~ Resolvido: a regra se refere ao **lead**, já coberta pela RN-009. Ao voltar ao pool, o lead segue as regras do pool: pode ser reivindicado por vendedores (RN-006) ou atribuído pelo gerente (RN-008).
+
+---
+
+## 9. Ideias futuras
+
+Ideias ainda não priorizadas. Só viram requisito quando tiverem problema, usuário e critérios de aceitação definidos.
+
+- **Modo claro/escuro:** preferência visual, resolvida no front-end. Só envolve a API se a preferência precisar acompanhar o usuário entre dispositivos.
+- **Internacionalização (i18n):** o idioma padrão é o português (pt-BR), e o inglês (en) será o primeiro idioma adicional. A API já se prepara com códigos de erro estáveis (RNF-008).
+- **Chat:** a definir se é comunicação interna da equipe ou atendimento ao cliente.
+- **Inteligência artificial:** a definir qual problema resolver. Exemplos: resumir o histórico do cliente antes de um contato, sugerir o próximo passo de uma proposta parada, priorizar os leads com maior chance de conversão.
