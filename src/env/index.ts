@@ -23,4 +23,7 @@ Diferença entre z.treeifyError(), console.error() e throw new Error()
 * console.error() tem como papel principal a exibição (log), na prática ele escreve uma mensagem ou texto no terminal (canal de erro stderr).
 * throw new Error() tem como papel principal interromper o fluxo do programa, na prática ele dispara uma exceção que para a execução do sistema imediatamente.
 
+
+Esse pattern é chamado de fail fast - utilizado para na falta de informações necessárias para rodar o nosso projeto de forma certa, seja lançado um erro e o servidor nem suba.
 */
+
