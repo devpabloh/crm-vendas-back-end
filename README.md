@@ -38,7 +38,7 @@ O cenário de demonstração é uma empresa fictícia de **consórcios**.
 | Documento | Conteúdo |
 |---|---|
 | [Levantamento de requisitos](docs/requirements.md) | Visão, perfis e permissões, requisitos funcionais e não funcionais, regras de negócio e critérios de aceitação |
-| [Decisões de arquitetura (ADRs)](docs/adr/README.md) | Registro das decisões técnicas e seus trade-offs |
+| [Decisões de arquitetura (ADRs)](docs/adr-architecture-decision-recod/README.md) | Registro das decisões técnicas e seus trade-offs |
 
 ## Como rodar localmente
 
