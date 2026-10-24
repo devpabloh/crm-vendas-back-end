@@ -42,13 +42,13 @@ Permitir que empresas de venda de serviços capturem leads pelo próprio site e 
 **Fora do escopo (por enquanto):**
 
 - Regras específicas de consórcio (grupos, cotas, contemplação, lances). O consórcio é usado apenas como **cenário de demonstração**.
-- Vários clientes compartilhando a mesma instalação (multi-tenant). Ver [ADR-0001](adr/0001-single-tenant.md).
+- Vários clientes compartilhando a mesma instalação (multi-tenant). Ver [ADR-0001](docs/adr-architecture-decision-recod/0001-single-tenant.md).
 - Pipelines de venda configuráveis. No MVP, os status da proposta são fixos.
 - Integrações externas (WhatsApp, e-mail marketing, ERP).
 
 ### Modelo de implantação
 
-Uma instância (deploy + banco) por empresa cliente. Ver [ADR-0001](adr/0001-single-tenant.md).
+Uma instância (deploy + banco) por empresa cliente. Ver [ADR-0001](docs/adr-architecture-decision-recod/0001-single-tenant.md).
 
 ---
 
