@@ -106,7 +106,8 @@ Legenda: ✅ permitido · 👤 apenas os próprios · 👥 apenas da sua equipe 
 - **RF-007** **[MVP]** Atribuir ou reatribuir um lead a um vendedor (gerente/admin).
 - **RF-018** **[MVP]** Listar o pool de leads sem responsável.
 - **RF-019** **[MVP]** Reivindicar um lead do pool (vendedor).
-- **RF-020** Configurar a estratégia de distribuição de leads: manual/pool ou rodízio (admin). Ver [ADR-0003](adr/0003-distribuicao-de-leads.md).
+- **RF-020** Configurar a estratégia de distribuição de leads: manual/pool ou rodízio (admin). Ver [ADR-0003](adr-architecture-decision-recod/0003-distribuicao-de-leads.md).
+
 
 ### Propostas e vendas
 
