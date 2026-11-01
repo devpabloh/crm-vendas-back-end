@@ -2,6 +2,8 @@
 
 > Documento vivo. Última revisão: 2026-10-18.
 > Itens marcados com **[MVP]** fazem parte da primeira entrega. Os demais compõem o backlog.
+>
+> **O escopo do MVP está fechado.** Um novo item só entra no MVP substituindo outro de prioridade menor.
 
 ## Sumário
 
@@ -129,8 +131,8 @@ Legenda: ✅ permitido · 👤 apenas os próprios · 👥 apenas da sua equipe 
 
 - **RF-014** **[MVP]** Gerenciar o catálogo de serviços (criar, listar, editar, ativar/desativar).
 - **RF-015** **[MVP]** Gerenciar usuários respeitando a hierarquia de papéis.
-- **RF-016** Registrar as ações relevantes em log de auditoria.
-- **RF-017** Consultar o log de auditoria.
+- **RF-016** **[MVP]** Registrar as ações relevantes em log de auditoria.
+- **RF-017** **[MVP]** Consultar o log de auditoria em uma lista paginada, com filtros e visualização do "antes e depois" de cada alteração (gerente/admin).
 
 ### Configurações da equipe *(pós-MVP)*
 
@@ -184,6 +186,8 @@ Legenda: ✅ permitido · 👤 apenas os próprios · 👥 apenas da sua equipe 
 - **RN-014** Ao passar para `GANHA` ou `PERDIDA`, a proposta registra a data de fechamento (`closedAt`).
 - **RN-015** Ao passar para `PERDIDA`, é obrigatório informar o motivo da perda.
 - **RN-016** Apenas propostas em `RASCUNHO` podem ser excluídas. Nos demais status, a proposta é mantida para preservar o histórico e as métricas.
+- **RN-017** O desconto é aplicado por item, em percentual de 0% a 100%. O valor final de cada item é arredondado para 2 casas decimais (meio para cima), e o total da proposta é a soma dos valores finais dos itens.
+- **RN-018** *(pós-MVP)* Proposta com desconto acima do limite da equipe exige aprovação do gerente do vendedor antes de ser enviada, passando por um novo status `PENDING_APPROVAL`. Qualquer alteração nos itens de uma proposta aprovada invalida a aprovação e a proposta volta para `DRAFT`. No MVP, não há limite: qualquer desconto de 0% a 100% é permitido e fica registrado em auditoria.
 
 ### Leads
 
@@ -192,8 +196,7 @@ Legenda: ✅ permitido · 👤 apenas os próprios · 👥 apenas da sua equipe 
 - **RN-008** O gerente pode atribuir ou reatribuir leads do pool ou da própria equipe, sobrepondo a reivindicação.
 - **RN-009** *(pós-MVP)* Lead reivindicado que não for trabalhado (RN-007) em até 24 horas corridas retorna ao pool.
 - **RN-013** Não podem existir dois clientes com o mesmo CPF/CNPJ ou e-mail. Ao tentar cadastrar um duplicado, o sistema informa quem é o responsável atual.
-- **RN-017** O desconto é aplicado por item, em percentual de 0% a 100%. O valor final de cada item é arredondado para 2 casas decimais (meio para cima), e o total da proposta é a soma dos valores finais dos itens.
-- **RN-018** *(pós-MVP)* Proposta com desconto acima do limite da equipe exige aprovação do gerente do vendedor antes de ser enviada, passando por um novo status `PENDING_APPROVAL`. Qualquer alteração nos itens de uma proposta aprovada invalida a aprovação e a proposta volta para `DRAFT`. No MVP, não há limite: qualquer desconto de 0% a 100% é permitido e fica registrado em auditoria.
+- **RN-019** Ao reatribuir um cliente (RN-008), suas propostas em aberto (`RASCUNHO`, `ENVIADA`, `EM_NEGOCIACAO`) são transferidas para o novo responsável na mesma operação. Propostas fechadas (`GANHA`, `PERDIDA`, `CANCELADA`) permanecem com o vendedor original, preservando o histórico e as métricas de vendas.
 
 ---
 
@@ -256,6 +259,13 @@ Formato: **Dado** (contexto) / **Quando** (ação) / **Então** (resultado verif
 
 - **CA-021** Dada uma proposta em `GANHA` da equipe de um gerente autenticado, quando ele cancelá-la informando o motivo, então o status passa a `CANCELADA`, o motivo é armazenado e a ação é registrada em auditoria.
 - **CA-022** Dado um vendedor autenticado, quando ele tentar cancelar uma proposta em `GANHA`, então o sistema responde `403 Forbidden` e nada é alterado.
+
+### RF-017 — Consultar log de auditoria
+
+- **CA-023** Dado um administrador autenticado, quando ele consultar o log, então recebe os registros paginados, do mais recente para o mais antigo, com filtros por período, usuário e entidade.
+- **CA-024** Dado um gerente autenticado, quando ele consultar o log, então vê apenas as ações dos usuários da sua equipe (incluindo as próprias) e as ações sem usuário, como os leads criados pelo formulário do site.
+- **CA-025** Dado um vendedor autenticado, quando ele tentar consultar o log, então o sistema responde `403 Forbidden`.
+- **CA-026** Dado um registro de alteração no log, quando ele for consultado, então a resposta inclui os valores anteriores e os novos apenas dos campos alterados, permitindo exibir o "antes e depois".
 
 ### RF-021 — Aceite online pelo cliente *(pós-MVP)*
 
